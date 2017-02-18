@@ -1,12 +1,14 @@
 // @flow
 
 import React, { Component } from 'react';
-import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar } from 'react-native';
+import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity } from 'react-native';
 import Menu, { MenuContext, MenuOptions, MenuOption, MenuTrigger } from 'react-native-menu';
 import ActionButton from 'react-native-action-button';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontIcon from 'react-native-vector-icons/FontAwesome';
+
+const renderTouchable = () => <TouchableOpacity/>;
 
 var _navigator;
 
@@ -22,6 +24,9 @@ export default class NotesApp extends Component {
 
     BackAndroid.addEventListener('hardwareBackPress', () => {
       this.saveNote();
+      if (this.menuContext.isMenuOpen()) {
+        this.menuContext.closeMenu();
+      }
       if (_navigator.getCurrentRoutes().length === 1  ) {
          return false;
       }
@@ -204,10 +209,6 @@ class EditNote extends Component {
     this.state = { text: props.note.content };
   }
 
-  componentWillUnmount() {
-    // TODO proabbly unregister menu
-  }
-
   render() {
     const { note, navigator, saveNote } = this.props;
 
@@ -229,7 +230,7 @@ class EditNote extends Component {
           <Menu onSelect={this.onMenuSelected} name={this.menuName}>
             <MenuTrigger disabled={true} />
             <MenuOptions>
-              <MenuOption value={'delete'}>
+              <MenuOption value={'delete'} renderTouchable={renderTouchable}>
                 <Text>Delete</Text>
               </MenuOption>
             </MenuOptions>
