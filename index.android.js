@@ -2,6 +2,7 @@
 
 import React, { Component } from 'react';
 import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar } from 'react-native';
+import Menu, { MenuContext, MenuOptions, MenuOption, MenuTrigger } from 'react-native-menu';
 import ActionButton from 'react-native-action-button';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -31,7 +32,7 @@ export default class NotesApp extends Component {
 
   render () {
     return (
-      <View style={{flex: 1}}>
+      <MenuContext style={{flex: 1}} ref={(el) => this.menuContext = el}>
         <StatusBar
           backgroundColor='#25796A'
           barStyle='light-content'
@@ -42,7 +43,7 @@ export default class NotesApp extends Component {
           initialRoute={{id: 'ListNotes'}}
           renderScene={this.navigatorRenderScene}
         />
-      </View>
+      </MenuContext>
     );
   }
 
@@ -65,6 +66,8 @@ export default class NotesApp extends Component {
             note={route.note}
             updateNote={this.updateNote}
             saveNote={this.saveNote}
+            deleteNote={this.deleteNote}
+            openMenu={this.openMenu}
           />
         );
     }
@@ -97,10 +100,20 @@ export default class NotesApp extends Component {
     this.dirtyNote = note;
   }
 
+  deleteNote = (id) => {
+    this.setState({
+      items: this.state.items.filter(n => n.id !== id)
+    });
+  }
+
   onDataArrived(newData) {
     this.setState({
       items: this.state.items.concat(newData)
     });
+  }
+
+  openMenu = (name) => {
+    this.menuContext.openMenu(name);
   }
 }
 
@@ -187,7 +200,12 @@ class ListNotes extends Component {
 class EditNote extends Component {
   constructor(props) {
     super(props);
+    this.menuName = 'EditNoteMenu';
     this.state = { text: props.note.content };
+  }
+
+  componentWillUnmount() {
+    // TODO proabbly unregister menu
   }
 
   render() {
@@ -205,8 +223,17 @@ class EditNote extends Component {
               // { title: 'Settings', iconName: 'md-settings', iconSize: 30, show: 'always' },
               { title: 'Menu', iconName: 'more-vert', show: 'always' },
             ]}
+            onActionSelected={this.onActionSelected}
             /*overflowIconName="md-more"*/
           />
+          <Menu onSelect={this.onMenuSelected} name={this.menuName}>
+            <MenuTrigger disabled={true} />
+            <MenuOptions>
+              <MenuOption value={'delete'}>
+                <Text>Delete</Text>
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
           <TextInput
             style={{flex: 1, borderColor: 'gray', borderWidth: 1}}
             multiline={true}
@@ -219,6 +246,16 @@ class EditNote extends Component {
           />
         </View>
     );
+  }
+
+  onActionSelected = () => {
+    this.props.openMenu(this.menuName);
+  }
+
+  onMenuSelected = (value) => {
+    const { note, deleteNote, navigator } = this.props;
+    deleteNote(note.id);
+    navigator.pop();
   }
 
   updateNote = (text) => {
