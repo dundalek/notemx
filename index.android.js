@@ -1,7 +1,7 @@
 // @flow
 
 import React, { Component } from 'react';
-import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid } from 'react-native';
+import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar } from 'react-native';
 import ActionButton from 'react-native-action-button';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -31,11 +31,18 @@ export default class NotesApp extends Component {
 
   render () {
     return (
-      <Navigator
-        style={styles.container}
-        tintColor='#2E9586'
-        initialRoute={{id: 'ListNotes'}}
-        renderScene={this.navigatorRenderScene}/>
+      <View style={{flex: 1}}>
+        <StatusBar
+          backgroundColor='#25796A'
+          barStyle='light-content'
+        />
+        <Navigator
+          style={styles.container}
+          tintColor='#2E9586'
+          initialRoute={{id: 'ListNotes'}}
+          renderScene={this.navigatorRenderScene}
+        />
+      </View>
     );
   }
 
