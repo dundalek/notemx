@@ -79,7 +79,12 @@ export default class NotesApp extends Component {
   }
 
   addNote = () => {
-    this.onDataArrived({id: 3, title: 'new note', content: ''});
+    const note = {id: 3, title: '', content: ''};
+    this.onDataArrived(note);
+    _navigator.push({
+      id: 'EditNote',
+      note,
+    });
   }
 
   addFolder = () => {
@@ -206,7 +211,16 @@ class EditNote extends Component {
   constructor(props) {
     super(props);
     this.menuName = 'EditNoteMenu';
-    this.state = { text: props.note.content };
+    this.state = {
+      title: props.note.title,
+      text: props.note.content
+    };
+  }
+
+  componentDidMount() {
+    if (!this.state.title) {
+      this.refs.titleInput.focus();
+    }
   }
 
   render() {
@@ -216,7 +230,7 @@ class EditNote extends Component {
       <View style={{flex: 1}}>
           <MaterialIcon.ToolbarAndroid
             style={styles.toolbar}
-            title={note.title}
+            title='Notes'
             titleColor="white"
             navIconName="keyboard-arrow-left"
             onIconClicked={this.saveNoteAndBack}
@@ -236,7 +250,17 @@ class EditNote extends Component {
             </MenuOptions>
           </Menu>
           <TextInput
-            style={{flex: 1, borderColor: 'gray', borderWidth: 1}}
+            ref="titleInput"
+            style={{fontSize: 20, fontWeight: 'bold', textAlign: 'center', padding: 5}}
+            underlineColorAndroid='transparent'
+            value={this.state.title}
+            returnKeyType='next'
+            onChangeText={this.updateNoteTitle}
+            onSubmitEditing={this.onTitleSubmitted}
+          />
+          <TextInput
+            ref="noteInput"
+            style={{flex: 1, padding: 20, paddingTop: 0}}
             multiline={true}
             textAlignVertical='top'
             underlineColorAndroid='transparent'
@@ -257,6 +281,16 @@ class EditNote extends Component {
     const { note, deleteNote, navigator } = this.props;
     deleteNote(note.id);
     navigator.pop();
+  }
+
+  onTitleSubmitted = () => {
+    this.refs.noteInput.focus();
+  }
+
+  updateNoteTitle = (title) => {
+    const { note, updateNote } = this.props;
+    updateNote({...note, title });
+    this.setState({ title });
   }
 
   updateNote = (text) => {
