@@ -177,7 +177,7 @@ class ListNotes extends Component {
 
   renderListViewRow(row) {
     const icon = row.folder
-      ? <FontIcon name={'folder'} style={styles.rowCount} />
+      ? <FontIcon name={'folder'} style={styles.rowIcon} />
       : <FontIcon name={'file-text-o'} style={styles.rowIcon} />;
 
     return(
@@ -188,9 +188,6 @@ class ListNotes extends Component {
               <View style={styles.rowDetailsContainer}>
                   <Text style={styles.rowTitle}>
                       {row.title}
-                  </Text>
-                  <Text style={styles.rowDetailsLine}>
-                      Detail
                   </Text>
                   <View style={styles.separator}/>
               </View>
@@ -320,15 +317,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    rowCount: {
-        fontSize: 20,
-        textAlign: 'right',
-        color: 'gray',
-        margin: 10,
-        marginLeft: 15,
-    },
     rowIcon: {
-        fontSize: 15,
+        fontSize: 20,
         textAlign: 'right',
         color: 'gray',
         margin: 10,
@@ -340,15 +330,10 @@ const styles = StyleSheet.create({
     rowTitle: {
         fontSize: 15,
         textAlign: 'left',
-        marginTop: 10,
-        marginBottom: 4,
+        marginTop: 15,
+        marginBottom: 15,
         marginRight: 10,
         color: '#000000'
-    },
-    rowDetailsLine: {
-        fontSize: 12,
-        marginBottom: 10,
-        color: 'gray',
     },
     separator: {
         height: 1,
