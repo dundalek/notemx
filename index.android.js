@@ -8,6 +8,9 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontIcon from 'react-native-vector-icons/FontAwesome';
 import CustomTransitions from './CustomTransitions';
+import Dropbox from 'dropbox';
+
+const dbx = new Dropbox(require('./config.json'));
 
 const renderTouchable = () => <TouchableOpacity/>;
 
@@ -16,12 +19,6 @@ var _navigator;
 export default class NotesApp extends Component {
   constructor() {
     super();
-    this.state = {
-      items: [
-        { id: 1, title: 'hello', folder: true },
-        { id: 2, title: 'world', content: 'hello' }
-      ]
-    };
 
     BackAndroid.addEventListener('hardwareBackPress', () => {
       this.saveNote();
@@ -46,7 +43,7 @@ export default class NotesApp extends Component {
         <Navigator
           style={styles.container}
           tintColor='#2E9586'
-          initialRoute={{id: 'ListNotes'}}
+          initialRoute={{id: 'ListNotes', path: ''}}
           renderScene={this.navigatorRenderScene}
           configureScene={(route, routeStack) =>
             // Navigator.SceneConfigs.PushFromRight
@@ -64,7 +61,7 @@ export default class NotesApp extends Component {
         return (
           <ListNotes
             navigator={navigator}
-            items={this.state.items}
+            path={route.path}
             addNote={this.addNote}
             addFolder={this.addFolder}
           />
@@ -133,19 +130,28 @@ export default class NotesApp extends Component {
 }
 
 class ListNotes extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+    this.state = {
+      items: []
+    };
     this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
+    this.listFolder(props.path);
   }
 
-  onActionSelected = (idx) => {
-    if (idx === 0) {
-      this.props.addFolder();
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.path !== this.props.path) {
+      this.setState({
+        items: []
+      });
+      this.listFolder(nextProps.path);
     }
   }
 
   render() {
-    const { items, addNote } = this.props;
+    const { addNote, path } = this.props;
+    const { items } = this.state;
+    const toolbarIcon = path ? 'keyboard-arrow-left' : null;
 
     return (
       <View style={{flex:1}}>
@@ -153,6 +159,8 @@ class ListNotes extends Component {
           style={styles.toolbar}
           title={'Notes'}
           titleColor="white"
+          navIconName={toolbarIcon}
+          onIconClicked={this.onToolbarIconClicked}
           actions={[
             // { title: 'Settings', iconName: 'settings', show: 'always' },
             { title: 'Create New Folder', iconName: 'create-new-folder', show: 'always' },
@@ -202,10 +210,58 @@ class ListNotes extends Component {
   }
 
   selectRow(row) {
-    this.props.navigator.push({
-      id: 'EditNote',
-      note: row,
-    });
+    if (row.folder) {
+      this.props.navigator.push({
+        id: 'ListNotes',
+        path: row.path_lower,
+      });
+    } else {
+      dbx.filesDownload({path: row.path_lower})
+        .then((item) => {
+          console.log(item);
+          // this.props.navigator.push({
+          //   id: 'EditNote',
+          //   note: {
+          //     id: item.id,
+          //     title: item.name,
+          //     path_lower: item.path_lower,
+          //     rev: item.rev,
+          //     content: item.fileBinary,
+          //   },
+          // });
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+  }
+
+  onActionSelected = (idx) => {
+    if (idx === 0) {
+      this.props.addFolder();
+    }
+  }
+
+  listFolder = (path) => {
+    dbx.filesListFolder({ path })
+      .then((response) => {
+        this.setState({
+          items: response.entries.map(item => ({
+            id: item.id,
+            folder: item['.tag'] === 'folder',
+            title: item.name,
+            path_lower: item.path_lower,
+            rev: item.rev
+          }))
+        })
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+  onToolbarIconClicked = () => {
+    this.props.navigator.pop();
   }
 }
 
@@ -217,6 +273,13 @@ class EditNote extends Component {
       title: props.note.title,
       text: props.note.content
     };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setState({
+      title: nextProps.note.title,
+      text: nextProps.note.content
+    })
   }
 
   componentDidMount() {
