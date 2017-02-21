@@ -7,6 +7,7 @@ import ActionButton from 'react-native-action-button';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontIcon from 'react-native-vector-icons/FontAwesome';
+import CustomTransitions from './CustomTransitions';
 
 const renderTouchable = () => <TouchableOpacity/>;
 
@@ -47,6 +48,10 @@ export default class NotesApp extends Component {
           tintColor='#2E9586'
           initialRoute={{id: 'ListNotes'}}
           renderScene={this.navigatorRenderScene}
+          configureScene={(route, routeStack) =>
+            // Navigator.SceneConfigs.PushFromRight
+            CustomTransitions.NONE
+          }
         />
       </MenuContext>
     );
