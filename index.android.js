@@ -1,7 +1,7 @@
 // @flow
 
 import React, { Component } from 'react';
-import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity } from 'react-native';
+import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl } from 'react-native';
 import Menu, { MenuContext, MenuOptions, MenuOption, MenuTrigger } from 'react-native-menu';
 import ActionButton from 'react-native-action-button';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
@@ -157,7 +157,8 @@ class ListNotes extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: []
+      items: [],
+      isRefreshing: true,
     };
     this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
     this.listFolder(props.path);
@@ -166,7 +167,8 @@ class ListNotes extends Component {
   componentWillReceiveProps(nextProps) {
     if (nextProps.path !== this.props.path) {
       this.setState({
-        items: []
+        items: [],
+        isRefreshing: true,
       });
       this.listFolder(nextProps.path);
     }
@@ -196,6 +198,16 @@ class ListNotes extends Component {
           dataSource={this.ds.cloneWithRows(items)}
           renderRow={(rowData) => this.renderListViewRow(rowData)}
           enableEmptySections={true}
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.isRefreshing}
+              onRefresh={this.onRefresh}
+              title="Loading..."
+              titleColor="#000000"
+              colors={['#ffffff']}
+              progressBackgroundColor='#2E9586'
+            />
+          }
         />
           <ActionButton buttonColor="rgba(231,76,60,1)" onPress={addNote} >
             {/*
@@ -268,10 +280,16 @@ class ListNotes extends Component {
     }
   }
 
+  onRefresh = () => {
+    this.setState({ isRefreshing: true })
+    this.listFolder(this.props.path);
+  }
+
   listFolder = (path) => {
     dbx.filesListFolder({ path })
       .then((response) => {
         this.setState({
+          isRefreshing: false,
           items: response.entries.map(item => ({
             id: item.id,
             folder: item['.tag'] === 'folder',
