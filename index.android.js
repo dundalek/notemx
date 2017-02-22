@@ -194,7 +194,9 @@ class ListNotes extends Component {
         />
         <ListView
           dataSource={this.ds.cloneWithRows(items)}
-          renderRow={(rowData) => this.renderListViewRow(rowData)} />
+          renderRow={(rowData) => this.renderListViewRow(rowData)}
+          enableEmptySections={true}
+        />
           <ActionButton buttonColor="rgba(231,76,60,1)" onPress={addNote} >
             {/*
             <ActionButton.Item buttonColor='#9b59b6' title="New Task" onPress={() => console.log("notes tapped!")}>
