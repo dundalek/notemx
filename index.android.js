@@ -10,11 +10,35 @@ import FontIcon from 'react-native-vector-icons/FontAwesome';
 import CustomTransitions from './CustomTransitions';
 import Dropbox from 'dropbox';
 
-const dbx = new Dropbox(require('./config.json'));
+import config from './config.json';
+
+const dbx = new Dropbox(config);
 
 const renderTouchable = () => <TouchableOpacity/>;
 
 var _navigator;
+
+function makeDropboxDownloadRequest(params) {
+  const url = 'https://content.dropboxapi.com/2/files/download';
+  const args = {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + config.accessToken,
+      'Dropbox-API-Arg': JSON.stringify(params)
+    },
+  };
+  var data;
+
+  return fetch(url, args)
+    .then(res => {
+      data = JSON.parse(res.headers.get('dropbox-api-result'));
+      return res.text();
+    })
+    .then(body => {
+      data.fileBinary = body;
+      return data;
+    })
+}
 
 export default class NotesApp extends Component {
   constructor() {
@@ -216,19 +240,19 @@ class ListNotes extends Component {
         path: row.path_lower,
       });
     } else {
-      dbx.filesDownload({path: row.path_lower})
+      makeDropboxDownloadRequest({path: row.path_lower})
         .then((item) => {
-          console.log(item);
-          // this.props.navigator.push({
-          //   id: 'EditNote',
-          //   note: {
-          //     id: item.id,
-          //     title: item.name,
-          //     path_lower: item.path_lower,
-          //     rev: item.rev,
-          //     content: item.fileBinary,
-          //   },
-          // });
+          // console.log(item);
+          this.props.navigator.push({
+            id: 'EditNote',
+            note: {
+              id: item.id,
+              title: item.name,
+              path_lower: item.path_lower,
+              rev: item.rev,
+              content: item.fileBinary,
+            },
+          });
         })
         .catch((error) => {
           console.error(error);
