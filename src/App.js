@@ -37,8 +37,20 @@ function makeDropboxDownloadRequest(params) {
     })
 }
 
+type Route = Object;
+type Path = string;
+type Note = Object;
 
 export default class App extends Component {
+  state: {
+      items: Array<Object>;
+      isRefreshing: bool;
+      path: string;
+  };
+  menuContext: Object;
+  folderCache: Object;
+  dirtyNote: Note | null;
+
   constructor() {
     super();
 
@@ -47,6 +59,7 @@ export default class App extends Component {
       isRefreshing: true,
       path: '',
     };
+    this.dirtyNote = null;
     this.folderCache = {};
     this.listFolder(this.state.path);
 
@@ -85,7 +98,7 @@ export default class App extends Component {
     );
   }
 
-  navigatorRenderScene = (route, navigator) => {
+  navigatorRenderScene = (route: Route, navigator: Navigator) => {
     _navigator = navigator;
     switch (route.id) {
       case 'NoteList':
@@ -117,7 +130,7 @@ export default class App extends Component {
     }
   }
 
-  onWillFocus = (route) => {
+  onWillFocus = (route: Route) => {
     if (route.id === 'NoteList') {
       this.setState({
         path: route.path,
@@ -165,17 +178,17 @@ export default class App extends Component {
     }
   }
 
-  updateNote = (note) => {
+  updateNote = (note: Note) => {
     this.dirtyNote = note;
   }
 
-  deleteNote = (id) => {
+  deleteNote = (id: string) => {
     this.setState({
       items: this.state.items.filter(n => n.id !== id)
     });
   }
 
-  editNote = (path) => {
+  editNote = (path: Path) => {
     makeDropboxDownloadRequest({ path })
       .then((item) => {
         _navigator.push({
@@ -194,13 +207,13 @@ export default class App extends Component {
       });
   }
 
-  onDataArrived(newData) {
+  onDataArrived(newData: Note) {
     this.setState({
       items: this.state.items.concat(newData)
     });
   }
 
-  openMenu = (name) => {
+  openMenu = (name: string) => {
     this.menuContext.openMenu(name);
   }
 
@@ -209,7 +222,7 @@ export default class App extends Component {
     this.listFolder(this.state.path);
   }
 
-  listFolder = (path) => {
+  listFolder = (path: Path) => {
     dbx.filesListFolder({ path })
       .then((response) => {
         const items = response.entries.map(item => ({

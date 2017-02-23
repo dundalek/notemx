@@ -8,7 +8,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import FontIcon from 'react-native-vector-icons/FontAwesome';
 
 export default class NoteList extends Component {
-  constructor(props) {
+  ds: ListView.DataSource;
+
+  constructor(props: Object) {
     super(props);
     this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
   }
@@ -64,7 +66,7 @@ export default class NoteList extends Component {
     );
   }
 
-  renderListViewRow(row) {
+  renderListViewRow(row: Object) {
     const { styles } = this.props;
     const icon = row.folder
       ? <FontIcon name={'folder'} style={styles.rowIcon} />
@@ -86,7 +88,7 @@ export default class NoteList extends Component {
     );
   }
 
-  selectRow(row) {
+  selectRow(row: Object) {
     if (row.folder) {
       this.props.navigator.push({
         id: 'NoteList',
@@ -97,7 +99,7 @@ export default class NoteList extends Component {
     }
   }
 
-  onActionSelected = (idx) => {
+  onActionSelected = (idx: string) => {
     if (idx === 0) {
       this.props.addFolder();
     }

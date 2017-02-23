@@ -8,7 +8,13 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 const renderTouchable = () => <TouchableOpacity/>;
 
 export default class NoteEdit extends Component {
-  constructor(props) {
+  state: {
+    title: string;
+    text: string;
+  }
+  menuName: string;
+
+  constructor(props: Object) {
     super(props);
     this.menuName = 'EditNoteMenu';
     this.state = {
@@ -17,7 +23,7 @@ export default class NoteEdit extends Component {
     };
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps: Object) {
     this.setState({
       title: nextProps.note.title,
       text: nextProps.note.content
@@ -84,7 +90,7 @@ export default class NoteEdit extends Component {
     this.props.openMenu(this.menuName);
   }
 
-  onMenuSelected = (value) => {
+  onMenuSelected = (value: string) => {
     const { note, deleteNote, navigator } = this.props;
     deleteNote(note.id);
     navigator.pop();
@@ -94,13 +100,13 @@ export default class NoteEdit extends Component {
     this.refs.noteInput.focus();
   }
 
-  updateNoteTitle = (title) => {
+  updateNoteTitle = (title: string) => {
     const { note, updateNote } = this.props;
     updateNote({...note, title });
     this.setState({ title });
   }
 
-  updateNote = (text) => {
+  updateNote = (text: string) => {
     const { note, updateNote } = this.props;
     updateNote({...note, content: text});
     this.setState({ text });
