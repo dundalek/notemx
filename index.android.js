@@ -44,6 +44,14 @@ export default class NotesApp extends Component {
   constructor() {
     super();
 
+    this.state = {
+      items: [],
+      isRefreshing: true,
+      path: '',
+    };
+    this.folderCache = {};
+    this.listFolder(this.state.path);
+
     BackAndroid.addEventListener('hardwareBackPress', () => {
       this.saveNote();
       if (this.menuContext.isMenuOpen()) {
@@ -73,6 +81,7 @@ export default class NotesApp extends Component {
             // Navigator.SceneConfigs.PushFromRight
             CustomTransitions.NONE
           }
+          onWillFocus={this.onWillFocus}
         />
       </MenuContext>
     );
@@ -88,6 +97,9 @@ export default class NotesApp extends Component {
             path={route.path}
             addNote={this.addNote}
             addFolder={this.addFolder}
+            onRefresh={this.onRefresh}
+            isRefreshing={this.state.isRefreshing}
+            items={this.state.items}
           />
         );
       case 'EditNote':
@@ -101,6 +113,17 @@ export default class NotesApp extends Component {
             openMenu={this.openMenu}
           />
         );
+    }
+  }
+
+  onWillFocus = (route) => {
+    if (route.id === 'ListNotes') {
+      this.setState({
+        path: route.path,
+        isRefreshing: true,
+        items: this.folderCache[route.path] || this.state.items
+      });
+      this.listFolder(route.path);
     }
   }
 
@@ -151,32 +174,44 @@ export default class NotesApp extends Component {
   openMenu = (name) => {
     this.menuContext.openMenu(name);
   }
+
+  onRefresh = () => {
+    this.setState({ isRefreshing: true })
+    this.listFolder(this.state.path);
+  }
+
+  listFolder = (path) => {
+    dbx.filesListFolder({ path })
+      .then((response) => {
+        const items = response.entries.map(item => ({
+          id: item.id,
+          folder: item['.tag'] === 'folder',
+          title: item.name,
+          path_lower: item.path_lower,
+          rev: item.rev
+        }));
+
+        this.folderCache[path] = items;
+
+        this.setState({
+          isRefreshing: false,
+          items,
+        })
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
 }
 
 class ListNotes extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      items: [],
-      isRefreshing: true,
-    };
     this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
-    this.listFolder(props.path);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.path !== this.props.path) {
-      this.setState({
-        items: [],
-        isRefreshing: true,
-      });
-      this.listFolder(nextProps.path);
-    }
   }
 
   render() {
-    const { addNote, path } = this.props;
-    const { items } = this.state;
+    const { addNote, path, onRefresh, items, isRefreshing } = this.props;
     const toolbarIcon = path ? 'keyboard-arrow-left' : null;
 
     return (
@@ -200,8 +235,8 @@ class ListNotes extends Component {
           enableEmptySections={true}
           refreshControl={
             <RefreshControl
-              refreshing={this.state.isRefreshing}
-              onRefresh={this.onRefresh}
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
               title="Loading..."
               titleColor="#000000"
               colors={['#ffffff']}
@@ -278,30 +313,6 @@ class ListNotes extends Component {
     if (idx === 0) {
       this.props.addFolder();
     }
-  }
-
-  onRefresh = () => {
-    this.setState({ isRefreshing: true })
-    this.listFolder(this.props.path);
-  }
-
-  listFolder = (path) => {
-    dbx.filesListFolder({ path })
-      .then((response) => {
-        this.setState({
-          isRefreshing: false,
-          items: response.entries.map(item => ({
-            id: item.id,
-            folder: item['.tag'] === 'folder',
-            title: item.name,
-            path_lower: item.path_lower,
-            rev: item.rev
-          }))
-        })
-      })
-      .catch((error) => {
-        console.error(error);
-      });
   }
 
   onToolbarIconClicked = () => {
