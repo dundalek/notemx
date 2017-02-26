@@ -92,7 +92,7 @@ export default class NoteEdit extends Component {
 
   onMenuSelected = (value: string) => {
     const { note, deleteNote, navigator } = this.props;
-    deleteNote(note.id);
+    deleteNote(note);
     navigator.pop();
   }
 

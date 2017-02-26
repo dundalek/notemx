@@ -12,7 +12,7 @@ import Dropbox from 'dropbox';
 import config from '../config.json';
 const dbx = new Dropbox(config);
 
-function loaderWrapper(startFn, endFn, delay=500) {
+function loaderWrapper(startFn, endFn, delay) {
   let started = false;
   const timeout = setTimeout(() => {
     started = true;
@@ -232,10 +232,11 @@ export default class App extends Component {
     this.dirtyNote = note;
   }
 
-  deleteNote = (id: string) => {
-    this.setState({
-      items: this.state.items.filter(n => n.id !== id)
-    });
+  deleteNote = (note: Note) => {
+    dbx.filesDelete({ path: note.path_lower })
+      .catch(e => console.error(e))
+      .then(this.loaderWrapper())
+      .then(this.onRefresh);
   }
 
   editNote = (path: Path) => {
