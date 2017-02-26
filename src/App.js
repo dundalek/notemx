@@ -74,19 +74,23 @@ type Note = Object;
 
 export default class App extends Component {
   state: {
-      items: Array<Object>;
+      items: Array<Object> | null;
       isRefreshing: number;
       path: string;
   };
   menuContext: Object;
   folderCache: Object;
-  dirtyNote: Note | null;
+  dirtyNote: {
+    note: Note;
+    title: string | undefined;
+    content: string | undefined;
+  } | null;
 
   constructor() {
     super();
 
     this.state = {
-      items: [],
+      items: null,
       isRefreshing: 0,
       path: '',
     };
@@ -194,8 +198,7 @@ export default class App extends Component {
   }
 
   addNote = () => {
-    const note = {id: 3, title: '', content: ''};
-    this.onDataArrived(note);
+    const note = {id: Math.random(), title: '', content: ''};
     _navigator.push({
       id: 'NoteEdit',
       note,
@@ -210,26 +213,57 @@ export default class App extends Component {
       .then(this.loaderWrapper());
   }
 
-  saveNote = () => {
+  saveNote = async () => {
     const note = this.dirtyNote;
     if (note) {
+      this.dirtyNote = null;
+      const oldNote = note.note;
+      let filePath = oldNote.path_lower;
+      if (oldNote.title && note.title && note.title !== oldNote.title) {
+        filePath = this.state.path + '/' + (note.title || 'Untitled.md');
+        try {
+          await dbx.filesMove({
+            from_path: oldNote.path_lower,
+            to_path: filePath,
+            autorename: true
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (!filePath) {
+        filePath = this.state.path + '/' + (note.title || 'Untitled.md');
+      }
+      if (!filePath.match(/\.[a-zA-Z0-9]+$/)) {
+        filePath += '.md';
+      }
+
+      const mode = oldNote.rev
+        ? { ".tag": "update", "update": oldNote.rev } // overwrite only if rev matches
+        : 'add';
+
       makeDropboxUploadRequest({
-         path: note.path_lower,
-         mode: {
-           ".tag": "update",
-           "update": note.rev
-         }, // overwrite only if rev matches
+         path: filePath,
+         mode,
          autorename: true,
       }, note.content)
         .then(x => console.log('note saved', x))
         .catch(e => console.error(e))
         .then(this.loaderWrapper())
-      this.dirtyNote = null;
+        .then(() => {
+          // if it is a new file then refresh
+          if (!oldNote.path_lower || (oldNote.title && note.title && note.title !== oldNote.title)) {
+            this.onRefresh();
+          }
+        });
     }
   }
 
   updateNote = (note: Note) => {
-    this.dirtyNote = note;
+    this.dirtyNote = {
+      ...this.dirtyNote,
+      ...note
+    };
   }
 
   deleteNote = (note: Note) => {
@@ -257,12 +291,6 @@ export default class App extends Component {
         console.error(error);
       })
       .then(this.loaderWrapper());
-  }
-
-  onDataArrived(newData: Note) {
-    this.setState({
-      items: this.state.items.concat(newData)
-    });
   }
 
   openMenu = (name: string) => {

@@ -40,7 +40,7 @@ export default class NoteList extends Component {
           ]}
           onActionSelected={this.onActionSelected}
         />
-        {items.length > 0 || isRefreshing
+        {items && (items.length > 0 || isRefreshing)
           ? <ListView
             dataSource={this.ds.cloneWithRows(items)}
             renderRow={(rowData) => this.renderListViewRow(rowData)}
@@ -56,7 +56,7 @@ export default class NoteList extends Component {
               />
             }
           />
-          : <Text style={styles.emptyFolderText}>Empty Folder!</Text>
+          : <Text style={styles.emptyFolderText}>{items ? 'Empty Folder!' : 'Loading files...'}</Text>
         }
         <Prompt
           title="Create new folder"

@@ -77,7 +77,7 @@ export default class NoteEdit extends Component {
             multiline={true}
             textAlignVertical='top'
             underlineColorAndroid='transparent'
-            onChangeText={this.updateNote}
+            onChangeText={this.updateNoteContent}
             onBlur={saveNote}
             onEndEditing={saveNote}
             value={this.state.text}
@@ -102,13 +102,13 @@ export default class NoteEdit extends Component {
 
   updateNoteTitle = (title: string) => {
     const { note, updateNote } = this.props;
-    updateNote({...note, title });
+    updateNote({ note, title });
     this.setState({ title });
   }
 
-  updateNote = (text: string) => {
+  updateNoteContent = (text: string) => {
     const { note, updateNote } = this.props;
-    updateNote({...note, content: text});
+    updateNote({ note, content: text});
     this.setState({ text });
   }
 
