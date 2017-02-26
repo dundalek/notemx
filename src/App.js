@@ -11,6 +11,22 @@ import Dropbox from 'dropbox';
 import config from '../config.json';
 const dbx = new Dropbox(config);
 
+function loaderWrapper(operation, startFn, endFn, delay=500) {
+  let started = false;
+  const timeout = setTimeout(() => {
+    started = true;
+    startFn();
+  }, delay);
+
+  operation.then(() => {
+    if (started) {
+      endFn();
+    } else {
+      clearTimeout(timeout);
+    }
+  })
+}
+
 var _navigator;
 
 // Because dropbox sdk does not work in RN
@@ -56,7 +72,7 @@ export default class App extends Component {
 
     this.state = {
       items: [],
-      isRefreshing: true,
+      isRefreshing: false,
       path: '',
     };
     this.dirtyNote = null;
@@ -134,7 +150,6 @@ export default class App extends Component {
     if (route.id === 'NoteList') {
       this.setState({
         path: route.path,
-        isRefreshing: true,
         items: this.folderCache[route.path] || this.state.items
       });
       this.listFolder(route.path);
@@ -218,12 +233,11 @@ export default class App extends Component {
   }
 
   onRefresh = () => {
-    this.setState({ isRefreshing: true })
     this.listFolder(this.state.path);
   }
 
   listFolder = (path: Path) => {
-    dbx.filesListFolder({ path })
+    const operation = dbx.filesListFolder({ path })
       .then((response) => {
         const items = response.entries.map(item => ({
           id: item.id,
@@ -234,15 +248,17 @@ export default class App extends Component {
         }));
 
         this.folderCache[path] = items;
-
-        this.setState({
-          isRefreshing: false,
-          items,
-        })
+        this.setState({ items });
       })
       .catch((error) => {
         console.error(error);
       });
+
+    loaderWrapper(
+      operation,
+      () => this.setState({ isRefreshing: true }),
+      () => this.setState({ isRefreshing: false })
+    );
   }
 }
 
