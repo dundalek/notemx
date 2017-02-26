@@ -38,21 +38,24 @@ export default class NoteList extends Component {
           ]}
           onActionSelected={this.onActionSelected}
         />
-        <ListView
-          dataSource={this.ds.cloneWithRows(items)}
-          renderRow={(rowData) => this.renderListViewRow(rowData)}
-          enableEmptySections={true}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={onRefresh}
-              title="Loading..."
-              titleColor="#000000"
-              colors={['#ffffff']}
-              progressBackgroundColor='#2E9586'
-            />
-          }
-        />
+        {items.length > 0 || isRefreshing
+          ? <ListView
+            dataSource={this.ds.cloneWithRows(items)}
+            renderRow={(rowData) => this.renderListViewRow(rowData)}
+            enableEmptySections={true}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={onRefresh}
+                title="Loading..."
+                titleColor="#000000"
+                colors={['#ffffff']}
+                progressBackgroundColor='#2E9586'
+              />
+            }
+          />
+          : <Text style={styles.emptyFolderText}>Empty Folder!</Text>
+        }
         <Prompt
           title="Create new folder"
           placeholder="New Folder"

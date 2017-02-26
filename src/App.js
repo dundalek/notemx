@@ -320,6 +320,12 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: '#CCCCCC'
     },
+    emptyFolderText: {
+      flex: 1,
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      fontSize: 20
+    },
     actionButtonIcon: {
       fontSize: 20,
       height: 22,
