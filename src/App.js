@@ -1,7 +1,7 @@
 // @flow
 
 import React, { Component } from 'react';
-import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl } from 'react-native';
+import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl, AppState } from 'react-native';
 import RNFetchBlob from 'react-native-fetch-blob'
 import { MenuContext } from 'react-native-menu';
 import CustomTransitions from './util/CustomTransitions';
@@ -107,6 +107,14 @@ export default class App extends Component {
     });
   }
 
+  componentDidMount() {
+    AppState.addEventListener('change', this.handleAppStateChange);
+  }
+
+  componentWillUnmount() {
+    AppState.removeEventListener('change', this.handleAppStateChange);
+  }
+
   render () {
     return (
       <MenuContext style={{flex: 1}} ref={(el) => this.menuContext = el}>
@@ -168,6 +176,20 @@ export default class App extends Component {
         items: this.folderCache[route.path] || this.state.items
       });
       this.listFolder(route.path);
+    }
+  }
+
+  handleAppStateChange = (currentAppState) => {
+    const currentRoute = _navigator.getCurrentRoutes().slice(-1)[0];
+    if (currentRoute && currentRoute.id === 'NoteList' && currentAppState === 'active') {
+      this.listFolder(this.state.path);
+    }
+    if (currentRoute && currentRoute.id === 'NoteEdit' && currentAppState === 'active') {
+      // TODO refresh note content if not changed
+    }
+    if (currentRoute && currentRoute.id === 'NoteEdit' && (currentAppState === 'inactive' || currentAppState === 'background')) {
+      this.saveNote();
+      //TODO update content in note edit and revision
     }
   }
 
