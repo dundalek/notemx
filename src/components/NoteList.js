@@ -22,12 +22,14 @@ export default class NoteList extends Component {
   render() {
     const { addNote, path, onRefresh, items, isRefreshing, styles } = this.props;
     const toolbarIcon = path ? 'keyboard-arrow-left' : null;
+    const parts = path.split('/');
+    const title = parts[parts.length-1] || 'NotesApp';
 
     return (
       <View style={{flex:1}}>
         <MaterialIcon.ToolbarAndroid
           style={styles.toolbar}
-          title={'Notes'}
+          title={title}
           titleColor="white"
           navIconName={toolbarIcon}
           onIconClicked={this.onToolbarIconClicked}
