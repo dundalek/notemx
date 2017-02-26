@@ -2,6 +2,7 @@
 
 import React, { Component } from 'react';
 import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl } from 'react-native';
+import RNFetchBlob from 'react-native-fetch-blob'
 import { MenuContext } from 'react-native-menu';
 import CustomTransitions from './util/CustomTransitions';
 import NoteList from './components/NoteList';
@@ -51,6 +52,20 @@ function makeDropboxDownloadRequest(params) {
       data.fileBinary = body;
       return data;
     })
+}
+
+function makeDropboxUploadRequest(params, body) {
+  const url = 'https://content.dropboxapi.com/2/files/upload';
+  const headers = {
+    'Content-Type': 'text/plain; charset=dropbox-cors-hack',
+    'Authorization': 'Bearer ' + config.accessToken,
+    'Dropbox-API-Arg': JSON.stringify(params)
+  };
+
+  return RNFetchBlob.fetch('POST', url, headers, body)
+    .then(res => {
+      return res.json();
+    });
 }
 
 type Route = Object;
@@ -170,26 +185,23 @@ export default class App extends Component {
   }
 
   saveNote = () => {
-    if (this.dirtyNote) {
-      dbx.filesUpload({
-         path: this.dirtyNote.path_lower,
+    console.log('saveNote called');
+    const note = this.dirtyNote;
+    if (note) {
+      console.log('saveNote saving');
+      const op = makeDropboxUploadRequest({
+         path: note.path_lower,
          mode: {
            ".tag": "update",
-           "update": this.dirtyNote.rev
+           "update": note.rev
          }, // overwrite only if rev matches
          autorename: true,
-         contents: this.dirtyNote.content
-      });
+      }, note.content)
+        .then(x => console.log('note saved', x))
+        .catch(e => console.error(e));
       this.dirtyNote = null;
-      // const note = this.dirtyNote;
-      // const items = [...this.state.items];
-      // for (let i = 0; i < items.length; i += 1) {
-      //   if (items[i].id === note.id) {
-      //     items[i] = note;
-      //     break;
-      //   }
-      // }
-      // this.setState({ items });
+
+      this.wrapAsyncOperation(op);
     }
   }
 
