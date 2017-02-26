@@ -12,20 +12,20 @@ import Dropbox from 'dropbox';
 import config from '../config.json';
 const dbx = new Dropbox(config);
 
-function loaderWrapper(operation, startFn, endFn, delay=500) {
+function loaderWrapper(startFn, endFn, delay=500) {
   let started = false;
   const timeout = setTimeout(() => {
     started = true;
     startFn();
   }, delay);
 
-  operation.then(() => {
+  return () => {
     if (started) {
       endFn();
     } else {
       clearTimeout(timeout);
     }
-  })
+  };
 }
 
 var _navigator;
@@ -181,19 +181,17 @@ export default class App extends Component {
   }
 
   addFolder = (path) => {
-    const op = dbx
+    dbx
       .filesCreateFolder({ path })
-      .then(() =>  this.listFolder(this.state.path));
-
-    this.wrapAsyncOperation(op);
+      .then(() =>  this.listFolder(this.state.path))
+      .catch(e => console.error(e))
+      .then(this.loaderWrapper());
   }
 
   saveNote = () => {
-    console.log('saveNote called');
     const note = this.dirtyNote;
     if (note) {
-      console.log('saveNote saving');
-      const op = makeDropboxUploadRequest({
+      makeDropboxUploadRequest({
          path: note.path_lower,
          mode: {
            ".tag": "update",
@@ -202,10 +200,9 @@ export default class App extends Component {
          autorename: true,
       }, note.content)
         .then(x => console.log('note saved', x))
-        .catch(e => console.error(e));
+        .catch(e => console.error(e))
+        .then(this.loaderWrapper())
       this.dirtyNote = null;
-
-      this.wrapAsyncOperation(op);
     }
   }
 
@@ -220,7 +217,7 @@ export default class App extends Component {
   }
 
   editNote = (path: Path) => {
-    const op = makeDropboxDownloadRequest({ path })
+    makeDropboxDownloadRequest({ path })
       .then((item) => {
         _navigator.push({
           id: 'NoteEdit',
@@ -235,9 +232,8 @@ export default class App extends Component {
       })
       .catch((error) => {
         console.error(error);
-      });
-
-    this.wrapAsyncOperation(op);
+      })
+      .then(this.loaderWrapper());
   }
 
   onDataArrived(newData: Note) {
@@ -255,7 +251,7 @@ export default class App extends Component {
   }
 
   listFolder = (path: Path) => {
-    const operation = dbx.filesListFolder({ path })
+    dbx.filesListFolder({ path })
       .then((response) => {
         const items = response.entries.map(item => ({
           id: item.id,
@@ -270,16 +266,15 @@ export default class App extends Component {
       })
       .catch((error) => {
         console.error(error);
-      });
-
-    this.wrapAsyncOperation(operation);
+      })
+      .then(this.loaderWrapper());
   }
 
-  wrapAsyncOperation(operation: Promise<any>) {
-    loaderWrapper(
-      operation,
+  loaderWrapper(delay=500) {
+    return loaderWrapper(
       () => this.setState({ isRefreshing: this.state.isRefreshing + 1 }),
-      () => this.setState({ isRefreshing: this.state.isRefreshing - 1 })
+      () => this.setState({ isRefreshing: this.state.isRefreshing - 1 }),
+      delay
     );
   }
 }
