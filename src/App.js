@@ -180,8 +180,12 @@ export default class App extends Component {
     });
   }
 
-  addFolder = () => {
-    this.onDataArrived({id: 4, title: 'new folder', folder: true})
+  addFolder = (path) => {
+    const op = dbx
+      .filesCreateFolder({ path })
+      .then(() =>  this.listFolder(this.state.path));
+
+    this.wrapAsyncOperation(op);
   }
 
   saveNote = () => {

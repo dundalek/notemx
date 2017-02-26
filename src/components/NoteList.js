@@ -6,12 +6,16 @@ import ActionButton from 'react-native-action-button';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontIcon from 'react-native-vector-icons/FontAwesome';
+import Prompt from 'react-native-prompt';
 
 export default class NoteList extends Component {
   ds: ListView.DataSource;
 
   constructor(props: Object) {
     super(props);
+    this.state = {
+      promptVisible: false
+    };
     this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
   }
 
@@ -48,6 +52,14 @@ export default class NoteList extends Component {
               progressBackgroundColor='#2E9586'
             />
           }
+        />
+        <Prompt
+          title="Create new folder"
+          placeholder="New Folder"
+          defaultValue=""
+          visible={this.state.promptVisible}
+          onCancel={() => this.setState({ promptVisible: false })}
+          onSubmit={this.onPromptSubmit}
         />
           <ActionButton buttonColor="rgba(231,76,60,1)" onPress={addNote} >
             {/*
@@ -101,8 +113,16 @@ export default class NoteList extends Component {
 
   onActionSelected = (idx: string) => {
     if (idx === 0) {
-      this.props.addFolder();
+      // create folder
+      this.setState({ promptVisible: true });
     }
+  }
+
+  onPromptSubmit = (value) => {
+    this.setState({
+      promptVisible: false
+    });
+    this.props.addFolder(this.props.path + '/' + value.trim());
   }
 
   onToolbarIconClicked = () => {
