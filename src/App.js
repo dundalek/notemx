@@ -60,7 +60,7 @@ type Note = Object;
 export default class App extends Component {
   state: {
       items: Array<Object>;
-      isRefreshing: bool;
+      isRefreshing: number;
       path: string;
   };
   menuContext: Object;
@@ -72,7 +72,7 @@ export default class App extends Component {
 
     this.state = {
       items: [],
-      isRefreshing: false,
+      isRefreshing: 0,
       path: '',
     };
     this.dirtyNote = null;
@@ -126,7 +126,7 @@ export default class App extends Component {
             addFolder={this.addFolder}
             editNote={this.editNote}
             onRefresh={this.onRefresh}
-            isRefreshing={this.state.isRefreshing}
+            isRefreshing={this.state.isRefreshing > 0}
             items={this.state.items}
             styles={styles}
           />
@@ -204,7 +204,7 @@ export default class App extends Component {
   }
 
   editNote = (path: Path) => {
-    makeDropboxDownloadRequest({ path })
+    const op = makeDropboxDownloadRequest({ path })
       .then((item) => {
         _navigator.push({
           id: 'NoteEdit',
@@ -220,6 +220,8 @@ export default class App extends Component {
       .catch((error) => {
         console.error(error);
       });
+
+    this.wrapAsyncOperation(op);
   }
 
   onDataArrived(newData: Note) {
@@ -254,10 +256,14 @@ export default class App extends Component {
         console.error(error);
       });
 
+    this.wrapAsyncOperation(operation);
+  }
+
+  wrapAsyncOperation(operation: Promise<any>) {
     loaderWrapper(
       operation,
-      () => this.setState({ isRefreshing: true }),
-      () => this.setState({ isRefreshing: false })
+      () => this.setState({ isRefreshing: this.state.isRefreshing + 1 }),
+      () => this.setState({ isRefreshing: this.state.isRefreshing - 1 })
     );
   }
 }
