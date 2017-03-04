@@ -362,10 +362,11 @@ const styles = StyleSheet.create({
       height: 56,
       backgroundColor: '#2E9586'
     },
-    rowContainer:{
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
+    rowContainer: {
+      height: 56,
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     rowIcon: {
         fontSize: 20,
