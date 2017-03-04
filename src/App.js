@@ -233,12 +233,12 @@ export default class App extends Component {
     if (note) {
       this.dirtyNote = null;
       const oldNote = note.note;
-      let filePath = oldNote.path_lower;
+      let filePath = oldNote.path_display;
       if (oldNote.title && note.title && note.title !== oldNote.title) {
         filePath = this.state.path + '/' + (note.title || 'Untitled.md');
         try {
           await makeDropboxRequest('files/move', {
-            from_path: oldNote.path_lower,
+            from_path: oldNote.path_display,
             to_path: filePath,
             autorename: true
           });
@@ -267,7 +267,7 @@ export default class App extends Component {
         .then(this.loaderWrapper())
         .then(() => {
           // if it is a new file then refresh
-          if (!oldNote.path_lower || (oldNote.title && note.title && note.title !== oldNote.title)) {
+          if (!oldNote.path_display || (oldNote.title && note.title && note.title !== oldNote.title)) {
             this.onRefresh();
           }
         });
@@ -282,21 +282,29 @@ export default class App extends Component {
   }
 
   deleteNote = (note: Note) => {
-    makeDropboxRequest('files/delete', { path: note.path_lower })
+    makeDropboxRequest('files/delete', { path: note.path_display })
       .catch(e => console.error(e))
       .then(this.loaderWrapper())
       .then(this.onRefresh);
   }
 
   editNote = (path: Path) => {
+    _navigator.push({
+      id: 'NoteEdit',
+      note: {
+        title: path.split('/').slice(-1)[0],
+        content: 'Loading...',
+        isLoading: true,
+      },
+    });
     makeDropboxDownloadRequest({ path })
       .then((item) => {
-        _navigator.push({
+        _navigator.replace({
           id: 'NoteEdit',
           note: {
             id: item.id,
             title: item.name,
-            path_lower: item.path_lower,
+            path_display: item.path_display,
             rev: item.rev,
             content: item.fileBinary,
           },
@@ -323,7 +331,7 @@ export default class App extends Component {
           id: item.id,
           folder: item['.tag'] === 'folder',
           title: item.name,
-          path_lower: item.path_lower,
+          path_display: item.path_display,
           rev: item.rev
         }));
 

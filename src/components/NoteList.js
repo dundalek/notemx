@@ -109,10 +109,10 @@ export default class NoteList extends Component {
     if (row.folder) {
       this.props.navigator.push({
         id: 'NoteList',
-        path: row.path_lower,
+        path: row.path_display,
       });
     } else {
-      this.props.editNote(row.path_lower);
+      this.props.editNote(row.path_display);
     }
   }
 
