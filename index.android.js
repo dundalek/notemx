@@ -3,4 +3,4 @@
 import { AppRegistry } from 'react-native';
 import App from './src/App';
 
-AppRegistry.registerComponent('NotesApp', () => App);
+AppRegistry.registerComponent('NoteMX', () => App);

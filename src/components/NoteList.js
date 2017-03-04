@@ -26,7 +26,7 @@ export default class NoteList extends Component {
     const { addNote, path, onRefresh, items, isRefreshing, styles } = this.props;
     const toolbarIcon = path ? 'keyboard-arrow-left' : null;
     const parts = path.split('/');
-    const title = parts[parts.length-1] || 'NotesApp';
+    const title = parts[parts.length-1] || 'NoteMX';
 
     return (
       <View style={{flex:1}}>
