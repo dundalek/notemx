@@ -31,13 +31,14 @@ export default class NoteEdit extends Component {
   }
 
   componentDidMount() {
-    if (!this.state.title) {
+    if (!this.props.note.isLoading && !this.state.title) {
       this.refs.titleInput.focus();
     }
   }
 
   render() {
     const { note, navigator, saveNote, styles } = this.props;
+    const { isLoading } = note;
 
     return (
       <View style={{flex: 1}}>
@@ -70,6 +71,7 @@ export default class NoteEdit extends Component {
             returnKeyType='next'
             onChangeText={this.updateNoteTitle}
             onSubmitEditing={this.onTitleSubmitted}
+            editable={!isLoading}
           />
           <TextInput
             ref="noteInput"
@@ -81,6 +83,7 @@ export default class NoteEdit extends Component {
             onBlur={saveNote}
             onEndEditing={saveNote}
             value={this.state.text}
+            editable={!isLoading}
           />
         </View>
     );

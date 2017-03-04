@@ -184,6 +184,7 @@ export default class App extends Component {
             deleteNote={this.deleteNote}
             openMenu={this.openMenu}
             styles={styles}
+            isLoading={route.isLoading}
           />
         );
     }
