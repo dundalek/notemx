@@ -38,7 +38,7 @@ export default class App extends Component {
       note: Note;
       isLoading: boolean;
   };
-  menuContext: Object;
+  menuContext: Object | null;
   folderCache: Object;
   dirtyNote: {
     note: Note;
@@ -62,7 +62,7 @@ export default class App extends Component {
 
     BackAndroid.addEventListener('hardwareBackPress', () => {
       this.saveNote();
-      if (this.menuContext.isMenuOpen()) {
+      if (this.menuContext && this.menuContext.isMenuOpen()) {
         this.menuContext.closeMenu();
       }
       if (_navigator.getCurrentRoutes().length === 1  ) {
@@ -285,7 +285,9 @@ export default class App extends Component {
   }
 
   openMenu = (name: string) => {
-    this.menuContext.openMenu(name);
+    if (this.menuContext) {
+      this.menuContext.openMenu(name);
+    }
   }
 
   onRefresh = () => {
