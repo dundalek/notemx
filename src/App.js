@@ -49,8 +49,10 @@ export default class App extends Component {
 
     this.state = {
       items: null,
-      isRefreshing: 0,
+      isRefreshing: 0, // refreshing folder list
       path: '',
+      note: null,
+      isLoading: false // loading note content
     };
     this.dirtyNote = null;
     this.folderCache = {};
@@ -120,13 +122,13 @@ export default class App extends Component {
         return (
           <NoteEdit
             navigator={navigator}
-            note={route.note}
+            note={this.state.note}
             updateNote={this.updateNote}
             saveNote={this.saveNote}
             deleteNote={this.deleteNote}
             openMenu={this.openMenu}
             styles={styles}
-            isLoading={route.isLoading}
+            isLoading={this.state.isLoading}
           />
         );
     }
@@ -148,19 +150,23 @@ export default class App extends Component {
       this.listFolder(this.state.path);
     }
     if (currentRoute && currentRoute.id === 'NoteEdit' && currentAppState === 'active') {
-      // TODO refresh note content if not changed
+      this.loadNote(this.state.note.path_display);
     }
     if (currentRoute && currentRoute.id === 'NoteEdit' && (currentAppState === 'inactive' || currentAppState === 'background')) {
       this.saveNote();
-      //TODO update content in note edit and revision
     }
   }
 
   addNote = () => {
-    const note = {id: Math.random(), title: '', content: ''};
+    this.setState({
+      note: {
+        title: '',
+        content: '',
+      },
+      isLoading: false,
+    });
     _navigator.push({
-      id: 'NoteEdit',
-      note,
+      id: 'NoteEdit'
     });
   }
 
@@ -179,6 +185,9 @@ export default class App extends Component {
       let filePath = oldNote.path_display;
       if (oldNote.title && note.title && note.title !== oldNote.title) {
         filePath = this.state.path + '/' + (note.title || 'Untitled.md');
+        if (!filePath.match(/\.[a-zA-Z0-9]+$/)) {
+          filePath += '.md';
+        }
         try {
           await makeDropboxRequest('files/move', {
             from_path: oldNote.path_display,
@@ -191,9 +200,9 @@ export default class App extends Component {
       }
       if (!filePath) {
         filePath = this.state.path + '/' + (note.title || 'Untitled.md');
-      }
-      if (!filePath.match(/\.[a-zA-Z0-9]+$/)) {
-        filePath += '.md';
+        if (!filePath.match(/\.[a-zA-Z0-9]+$/)) {
+          filePath += '.md';
+        }
       }
 
       const mode = oldNote.rev
@@ -205,7 +214,11 @@ export default class App extends Component {
          mode,
          autorename: true,
       }, note.content)
-        .then(x => console.log('note saved', x))
+        .then(note => {
+          this.setState({
+            note: this.transformNote(note)
+          });
+        })
         .catch(e => console.error(e))
         .then(this.loaderWrapper())
         .then(() => {
@@ -231,32 +244,42 @@ export default class App extends Component {
       .then(this.onRefresh);
   }
 
-  editNote = (path: Path) => {
-    _navigator.push({
-      id: 'NoteEdit',
+  loadNote = (path: path) => {
+    this.setState({
       note: {
         title: path.split('/').slice(-1)[0],
         content: 'Loading...',
-        isLoading: true,
       },
+      isLoading: true,
     });
     makeDropboxDownloadRequest({ path })
       .then((item) => {
-        _navigator.replace({
-          id: 'NoteEdit',
-          note: {
-            id: item.id,
-            title: item.name,
-            path_display: item.path_display,
-            rev: item.rev,
-            content: item.fileBinary,
-          },
+        this.setState({
+          isLoading: false,
+          note: this.transformNote(item),
         });
       })
       .catch((error) => {
         console.error(error);
       })
       .then(this.loaderWrapper());
+  }
+
+  transformNote(item) {
+    return {
+      id: item.id,
+      title: item.name,
+      path_display: item.path_display,
+      rev: item.rev,
+      content: item.fileBinary,
+    }
+  }
+
+  editNote = (path: Path) => {
+    this.loadNote(path);
+    _navigator.push({
+      id: 'NoteEdit',
+    });
   }
 
   openMenu = (name: string) => {

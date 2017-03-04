@@ -17,28 +17,29 @@ export default class NoteEdit extends Component {
   constructor(props: Object) {
     super(props);
     this.menuName = 'EditNoteMenu';
-    this.state = {
-      title: props.note.title,
-      text: props.note.content
-    };
+    this.state = this.getStateFromProps(props);
   }
 
   componentWillReceiveProps(nextProps: Object) {
-    this.setState({
-      title: nextProps.note.title,
-      text: nextProps.note.content
-    })
+    this.setState(this.getStateFromProps(nextProps));
+  }
+
+  getStateFromProps(props) {
+    return {
+      title: props.note ? props.note.title : '',
+      text: props.note ? props.note.content : '',
+    };
   }
 
   componentDidMount() {
-    if (!this.props.note.isLoading && !this.state.title) {
+    if (!this.props.isLoading && !this.state.title) {
       this.refs.titleInput.focus();
     }
   }
 
   render() {
-    const { note, navigator, saveNote, styles } = this.props;
-    const { isLoading } = note;
+    const { note, navigator, saveNote, styles, isLoading } = this.props;
+    const { text, title } = this.state;
 
     return (
       <View style={{flex: 1}}>
@@ -67,7 +68,7 @@ export default class NoteEdit extends Component {
             ref="titleInput"
             style={{fontSize: 20, fontWeight: 'bold', textAlign: 'center', padding: 5}}
             underlineColorAndroid='transparent'
-            value={this.state.title}
+            value={title}
             returnKeyType='next'
             onChangeText={this.updateNoteTitle}
             onSubmitEditing={this.onTitleSubmitted}
@@ -80,9 +81,10 @@ export default class NoteEdit extends Component {
             textAlignVertical='top'
             underlineColorAndroid='transparent'
             onChangeText={this.updateNoteContent}
-            onBlur={saveNote}
-            onEndEditing={saveNote}
-            value={this.state.text}
+            // we handle back button and app state change so these should no be necessary to catch changes
+            // onBlur={saveNote}
+            // onEndEditing={saveNote}
+            value={text}
             editable={!isLoading}
           />
         </View>

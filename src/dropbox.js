@@ -14,7 +14,7 @@ export function makeDropboxDownloadRequest(params) {
       'Dropbox-API-Arg': JSON.stringify(params)
     },
   };
-  var data;
+  var data = {};
 
   return fetch(url, args)
     .then(res => {
