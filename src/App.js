@@ -35,13 +35,15 @@ export default class App extends Component {
       items: Array<Object> | null;
       isRefreshing: number;
       path: string;
+      note: Note;
+      isLoading: boolean;
   };
   menuContext: Object;
   folderCache: Object;
   dirtyNote: {
     note: Note;
-    title: string | undefined;
-    content: string | undefined;
+    title: string | typeof undefined;
+    content: string | typeof undefined;
   } | null;
 
   constructor() {
@@ -51,7 +53,7 @@ export default class App extends Component {
       items: null,
       isRefreshing: 0, // refreshing folder list
       path: '',
-      note: null,
+      note: {},
       isLoading: false // loading note content
     };
     this.dirtyNote = null;
@@ -144,7 +146,7 @@ export default class App extends Component {
     }
   }
 
-  handleAppStateChange = (currentAppState) => {
+  handleAppStateChange = (currentAppState: string) => {
     const currentRoute = _navigator.getCurrentRoutes().slice(-1)[0];
     if (currentRoute && currentRoute.id === 'NoteList' && currentAppState === 'active') {
       this.listFolder(this.state.path);
@@ -170,7 +172,7 @@ export default class App extends Component {
     });
   }
 
-  addFolder = (path) => {
+  addFolder = (path: Path) => {
     makeDropboxRequest('files/create_folder', { path })
       .then(() =>  this.listFolder(this.state.path))
       .catch(e => console.error(e))
@@ -244,7 +246,7 @@ export default class App extends Component {
       .then(this.onRefresh);
   }
 
-  loadNote = (path: path) => {
+  loadNote = (path: Path) => {
     this.setState({
       note: {
         title: path.split('/').slice(-1)[0],
@@ -265,7 +267,7 @@ export default class App extends Component {
       .then(this.loaderWrapper());
   }
 
-  transformNote(item) {
+  transformNote(item: Object): Note {
     return {
       id: item.id,
       title: item.name,
@@ -310,7 +312,7 @@ export default class App extends Component {
       .then(this.loaderWrapper());
   }
 
-  loaderWrapper(delay=500) {
+  loaderWrapper(delay:number=500) {
     return loaderWrapper(
       () => this.setState({ isRefreshing: this.state.isRefreshing + 1 }),
       () => this.setState({ isRefreshing: this.state.isRefreshing - 1 }),

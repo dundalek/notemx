@@ -10,6 +10,9 @@ import Prompt from 'react-native-prompt';
 
 export default class NoteList extends Component {
   ds: ListView.DataSource;
+  state: {
+    promptVisible: boolean;
+  };
 
   constructor(props: Object) {
     super(props);
@@ -123,7 +126,7 @@ export default class NoteList extends Component {
     }
   }
 
-  onPromptSubmit = (value) => {
+  onPromptSubmit = (value: string) => {
     this.setState({
       promptVisible: false
     });

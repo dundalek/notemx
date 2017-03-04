@@ -24,7 +24,7 @@ export default class NoteEdit extends Component {
     this.setState(this.getStateFromProps(nextProps));
   }
 
-  getStateFromProps(props) {
+  getStateFromProps(props: Object) {
     return {
       title: props.note ? props.note.title : '',
       text: props.note ? props.note.content : '',
