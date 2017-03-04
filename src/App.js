@@ -10,7 +10,6 @@ import NoteEdit from './components/NoteEdit';
 
 import Dropbox from 'dropbox';
 import config from '../config.json';
-const dbx = new Dropbox(config);
 
 function loaderWrapper(startFn, endFn, delay) {
   let started = false;
@@ -63,6 +62,23 @@ function makeDropboxUploadRequest(params, body) {
   };
 
   return RNFetchBlob.fetch('POST', url, headers, body)
+    .then(res => {
+      return res.json();
+    });
+}
+
+function makeDropboxRequest(endpoint, params) {
+  const url = 'https://api.dropboxapi.com/2/' + endpoint;
+  const args = {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + config.accessToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params)
+  };
+
+  return fetch(url, args)
     .then(res => {
       return res.json();
     });
@@ -206,8 +222,7 @@ export default class App extends Component {
   }
 
   addFolder = (path) => {
-    dbx
-      .filesCreateFolder({ path })
+    makeDropboxRequest('files/create_folder', { path })
       .then(() =>  this.listFolder(this.state.path))
       .catch(e => console.error(e))
       .then(this.loaderWrapper());
@@ -222,7 +237,7 @@ export default class App extends Component {
       if (oldNote.title && note.title && note.title !== oldNote.title) {
         filePath = this.state.path + '/' + (note.title || 'Untitled.md');
         try {
-          await dbx.filesMove({
+          await makeDropboxRequest('files/move', {
             from_path: oldNote.path_lower,
             to_path: filePath,
             autorename: true
@@ -267,7 +282,7 @@ export default class App extends Component {
   }
 
   deleteNote = (note: Note) => {
-    dbx.filesDelete({ path: note.path_lower })
+    makeDropboxRequest('files/delete', { path: note.path_lower })
       .catch(e => console.error(e))
       .then(this.loaderWrapper())
       .then(this.onRefresh);
@@ -302,7 +317,7 @@ export default class App extends Component {
   }
 
   listFolder = (path: Path) => {
-    dbx.filesListFolder({ path })
+    makeDropboxRequest('files/list_folder', { path })
       .then((response) => {
         const items = response.entries.map(item => ({
           id: item.id,
