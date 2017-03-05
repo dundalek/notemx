@@ -114,6 +114,7 @@ export default class App extends Component {
             addNote={this.addNote}
             addFolder={this.addFolder}
             editNote={this.editNote}
+            openMenu={this.openMenu}
             onRefresh={this.onRefreshControl}
             isRefreshing={this.state.isRefreshing > 0}
             items={this.state.items}

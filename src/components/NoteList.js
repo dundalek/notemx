@@ -1,12 +1,15 @@
 // @flow
 
 import React, { Component } from 'react';
-import { View, TextInput, ListView, RefreshControl, TouchableHighlight, Text } from 'react-native';
+import { View, TextInput, ListView, RefreshControl, TouchableHighlight, Text, TouchableOpacity } from 'react-native';
 import ActionButton from 'react-native-action-button';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontIcon from 'react-native-vector-icons/FontAwesome';
 import Prompt from 'react-native-prompt';
+import Menu, { MenuOptions, MenuOption, MenuTrigger } from 'react-native-menu';
+
+const renderTouchable = () => <TouchableOpacity/>;
 
 export default class NoteList extends Component {
   ds: ListView.DataSource;
@@ -16,6 +19,7 @@ export default class NoteList extends Component {
 
   constructor(props: Object) {
     super(props);
+    this.menuName = 'NoteListMenu';
     this.state = {
       promptVisible: false
     };
@@ -38,11 +42,20 @@ export default class NoteList extends Component {
           onIconClicked={this.onToolbarIconClicked}
           actions={[
             // { title: 'Settings', iconName: 'settings', show: 'always' },
-            { title: 'Create New Folder', iconName: 'create-new-folder', show: 'always' },
+            // { title: 'Create New Folder', iconName: 'create-new-folder', show: 'always' },
+            { title: 'Search', iconName: 'search', show: 'always' },
             { title: 'Menu', iconName: 'more-vert', show: 'always' },
           ]}
           onActionSelected={this.onActionSelected}
         />
+        <Menu onSelect={this.onMenuSelected} name={this.menuName}>
+          <MenuTrigger disabled={true} />
+          <MenuOptions>
+            <MenuOption value={'create_folder'} renderTouchable={renderTouchable}>
+              <Text>Create New Folder</Text>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
         {items && (items.length > 0 || isRefreshing)
           ? <ListView
             dataSource={this.ds.cloneWithRows(items)}
@@ -119,10 +132,17 @@ export default class NoteList extends Component {
     }
   }
 
-  onActionSelected = (idx: string) => {
-    if (idx === 0) {
-      // create folder
+  onMenuSelected = (value: string) => {
+    if (value === 'create_folder') {
       this.setState({ promptVisible: true });
+    }
+  }
+
+  onActionSelected = (idx: number) => {
+    if (idx === 0) {
+
+    } else if (idx === 1) {
+      this.props.openMenu(this.menuName);
     }
   }
 
