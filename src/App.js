@@ -114,7 +114,7 @@ export default class App extends Component {
             addNote={this.addNote}
             addFolder={this.addFolder}
             editNote={this.editNote}
-            onRefresh={this.onRefresh}
+            onRefresh={this.onRefreshControl}
             isRefreshing={this.state.isRefreshing > 0}
             items={this.state.items}
             styles={styles}
@@ -294,8 +294,14 @@ export default class App extends Component {
     this.listFolder(this.state.path);
   }
 
+  onRefreshControl = () => {
+    this.setState({ isRefreshing: this.state.isRefreshing + 1 });
+    this.listFolder(this.state.path)
+      .then(() => this.setState({ isRefreshing: this.state.isRefreshing - 1 }));
+  }
+
   listFolder = (path: Path) => {
-    makeDropboxRequest('files/list_folder', { path })
+    return makeDropboxRequest('files/list_folder', { path })
       .then((response) => {
         const items = response.entries.map(item => ({
           id: item.id,
