@@ -1,5 +1,6 @@
 // @flow
 
+import _ from 'lodash';
 import React, { Component } from 'react';
 import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl, AppState } from 'react-native';
 import { MenuContext } from 'react-native-menu';
@@ -54,7 +55,8 @@ export default class App extends Component {
       isRefreshing: 0, // refreshing folder list
       path: '',
       note: {},
-      isLoading: false // loading note content
+      isLoading: false, // loading note content
+      searchQuery: '',
     };
     this.dirtyNote = null;
     this.folderCache = {};
@@ -119,6 +121,26 @@ export default class App extends Component {
             isRefreshing={this.state.isRefreshing > 0}
             items={this.state.items}
             styles={styles}
+            onSearchChange={this.onSearchChange}
+            onSearchToggle={this.onSearchToggle}
+          />
+        );
+      case 'NoteSearch':
+        return (
+          <NoteList
+            navigator={navigator}
+            path={route.path}
+            addNote={this.addNote}
+            addFolder={this.addFolder}
+            editNote={this.editNote}
+            openMenu={this.openMenu}
+            onRefresh={this.onRefreshControl}
+            isRefreshing={this.state.isRefreshing > 0}
+            items={this.state.items}
+            styles={styles}
+            onSearchChange={this.onSearchChange}
+            onSearchToggle={this.onSearchToggle}
+            isSearching={true}
           />
         );
       case 'NoteEdit':
@@ -327,6 +349,53 @@ export default class App extends Component {
       () => this.setState({ isRefreshing: this.state.isRefreshing - 1 }),
       delay
     );
+  }
+
+  _doSearch = _.debounce((query) => {
+    makeDropboxRequest('files/search', {
+      path: "",
+      query,
+      start: 0,
+      max_results: 20,
+      // "mode": "filename"
+    })
+    .then((response) => {
+      const items = response.matches.map(match => {
+        const item = match.metadata;
+        return {
+          id: item.id,
+          folder: item['.tag'] === 'folder',
+          title: item.name,
+          path_display: item.path_display,
+          rev: item.rev
+        }
+      });
+
+      // this.folderCache[path] = items;
+      this.setState({ items });
+    })
+    .catch((error) => {
+      console.error(error);
+    })
+    .then(this.loaderWrapper());
+  }, 300)
+
+  onSearchChange = (text) => {
+    if (_.isObject(text)) {
+      // search bar returns object when x is tapped
+      text = '';
+    }
+    this.setState({
+      searchQuery: text
+    });
+    this._doSearch(text);
+  }
+
+  onSearchToggle = () => {
+    const currentRoute = _navigator.getCurrentRoutes().slice(-1)[0];
+    if (currentRoute.id !== 'NoteSearch') {
+      _navigator.push({ id: 'NoteSearch' });
+    }
   }
 }
 

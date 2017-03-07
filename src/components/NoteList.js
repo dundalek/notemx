@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import FontIcon from 'react-native-vector-icons/FontAwesome';
 import Prompt from 'react-native-prompt';
 import Menu, { MenuOptions, MenuOption, MenuTrigger } from 'react-native-menu';
+import SearchBar from 'react-native-material-design-searchbar';
 
 const renderTouchable = () => <TouchableOpacity/>;
 
@@ -27,10 +28,16 @@ export default class NoteList extends Component {
   }
 
   render() {
-    const { addNote, path, onRefresh, items, isRefreshing, styles } = this.props;
-    const toolbarIcon = path ? 'keyboard-arrow-left' : null;
-    const parts = path.split('/');
-    const title = parts[parts.length-1] || 'NoteMX';
+    const { addNote, path, onRefresh, items, isRefreshing, styles, isSearching } = this.props;
+    const toolbarIcon = (path || isSearching) ? 'keyboard-arrow-left' : null;
+    let title = '';
+    if (path) {
+      const parts = path.split('/');
+      title = parts[parts.length-1];
+    } else if (isSearching) {
+      title = 'Search Notes';
+    }
+    title = title  || 'NoteMX';
 
     return (
       <View style={{flex:1}}>
@@ -48,6 +55,19 @@ export default class NoteList extends Component {
           ]}
           onActionSelected={this.onActionSelected}
         />
+        {isSearching && <SearchBar
+          onSearchChange={this.onSearchChange}
+          height={50}
+          // onFocus={() => console.log('On Focus')}
+          // onBlur={() => console.log('On Blur')}
+          placeholder={'Search...'}
+          autoCorrect={false}
+          padding={5}
+          returnKeyType={'search'}
+          inputProps={{
+            autoFocus: true
+          }}
+        />}
         <Menu onSelect={this.onMenuSelected} name={this.menuName}>
           <MenuTrigger disabled={true} />
           <MenuOptions>
@@ -140,7 +160,7 @@ export default class NoteList extends Component {
 
   onActionSelected = (idx: number) => {
     if (idx === 0) {
-
+      this.props.onSearchToggle();
     } else if (idx === 1) {
       this.props.openMenu(this.menuName);
     }
@@ -155,5 +175,9 @@ export default class NoteList extends Component {
 
   onToolbarIconClicked = () => {
     this.props.navigator.pop();
+  }
+
+  onSearchChange = (text) => {
+    this.props.onSearchChange(text);
   }
 }
