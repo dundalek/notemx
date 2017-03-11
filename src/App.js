@@ -4,6 +4,7 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl, AppState, Share } from 'react-native';
 import { MenuContext } from 'react-native-menu';
+import ShareMenu from 'react-native-share-menu';
 import CustomTransitions from './util/CustomTransitions';
 import NoteList from './components/NoteList';
 import NoteEdit from './components/NoteEdit';
@@ -38,6 +39,7 @@ export default class App extends Component {
       path: string;
       note: Note;
       isLoading: boolean;
+      sharedText: string;
   };
   menuContext: Object | null;
   folderCache: Object;
@@ -57,6 +59,7 @@ export default class App extends Component {
       note: {},
       isLoading: false, // loading note content
       searchQuery: '',
+      sharedText: '',
     };
     this.dirtyNote = null;
     this.folderCache = {};
@@ -73,6 +76,16 @@ export default class App extends Component {
       _navigator.pop();
       return true;
     });
+  }
+
+  componentWillMount() {
+    ShareMenu.getSharedText((text :string) => {
+      if (text && text.length) {
+        this.setState({
+          sharedText: text
+        });
+      }
+    })
   }
 
   componentDidMount() {
@@ -123,6 +136,7 @@ export default class App extends Component {
             styles={styles}
             onSearchChange={this.onSearchChange}
             onSearchToggle={this.onSearchToggle}
+            isSharing={!!this.state.sharedText}
           />
         );
       case 'NoteSearch':
@@ -184,12 +198,18 @@ export default class App extends Component {
   }
 
   addNote = () => {
+    if (this.state.sharedText) {
+      this.updateNote({
+        content: this.state.sharedText
+      });
+    }
     this.setState({
       note: {
         title: '',
-        content: '',
+        content: this.state.sharedText,
       },
       isLoading: false,
+      sharedText: ''
     });
     _navigator.push({
       id: 'NoteEdit'
@@ -207,7 +227,7 @@ export default class App extends Component {
     const note = this.dirtyNote;
     if (note) {
       this.dirtyNote = null;
-      const oldNote = note.note;
+      const oldNote = note.note || {};
       let filePath = oldNote.path_display;
       if (oldNote.title && note.title && note.title !== oldNote.title) {
         filePath = this.state.path + '/' + (note.title || 'Untitled.md');
@@ -280,9 +300,18 @@ export default class App extends Component {
     });
     makeDropboxDownloadRequest({ path })
       .then((item) => {
+        const note = this.transformNote(item);
+        if (this.state.sharedText) {
+          note.content += '\n\n' + this.state.sharedText;
+          this.updateNote({
+            note,
+            content: note.content
+          });
+        }
         this.setState({
           isLoading: false,
-          note: this.transformNote(item),
+          note: note,
+          sharedText: ''
         });
       })
       .catch((error) => {
@@ -415,6 +444,13 @@ const styles = StyleSheet.create({
     toolbar: {
       height: 56,
       backgroundColor: '#2E9586'
+    },
+    toolbarMessage: {
+      height: 56,
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      color: 'white',
+      backgroundColor: '#4BAB9E'
     },
     rowContainer: {
       height: 56,
