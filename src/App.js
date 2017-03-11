@@ -2,7 +2,7 @@
 
 import _ from 'lodash';
 import React, { Component } from 'react';
-import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl, AppState } from 'react-native';
+import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl, AppState, Share } from 'react-native';
 import { MenuContext } from 'react-native-menu';
 import CustomTransitions from './util/CustomTransitions';
 import NoteList from './components/NoteList';
@@ -151,6 +151,7 @@ export default class App extends Component {
             updateNote={this.updateNote}
             saveNote={this.saveNote}
             deleteNote={this.deleteNote}
+            shareNote={this.shareNote}
             openMenu={this.openMenu}
             styles={styles}
             isLoading={this.state.isLoading}
@@ -396,6 +397,13 @@ export default class App extends Component {
     if (currentRoute.id !== 'NoteSearch') {
       _navigator.push({ id: 'NoteSearch' });
     }
+  }
+
+  shareNote = (note) => {
+    Share.share({
+      title: note.title,
+      message: note.content
+    }).catch(e => console.error(e));
   }
 }
 

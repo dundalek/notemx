@@ -62,6 +62,9 @@ export default class NoteEdit extends Component {
               <MenuOption value={'delete'} renderTouchable={renderTouchable}>
                 <Text>Delete</Text>
               </MenuOption>
+              <MenuOption value={'share'} renderTouchable={renderTouchable}>
+                <Text>Share</Text>
+              </MenuOption>
             </MenuOptions>
           </Menu>
           <TextInput
@@ -96,9 +99,19 @@ export default class NoteEdit extends Component {
   }
 
   onMenuSelected = (value: string) => {
-    const { note, deleteNote, navigator } = this.props;
-    deleteNote(note);
-    navigator.pop();
+    const { note, deleteNote, shareNote, navigator } = this.props;
+    switch (value) {
+      case 'delete':
+        deleteNote(note);
+        navigator.pop();
+        break;
+      case 'share':
+        shareNote({
+          title: this.state.title,
+          content: this.state.text,
+        });
+        break;
+    }
   }
 
   onTitleSubmitted = () => {
