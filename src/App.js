@@ -501,4 +501,13 @@ const styles = StyleSheet.create({
       height: 22,
       color: 'white',
     },
+    menuOption: {
+      height: 48,
+      paddingLeft: 16,
+      paddingTop: 14,
+    },
+    menuOptionText: {
+      // fontSize: 16,
+      color: 'rgba(0,0,0,0.87)',
+    },
 });

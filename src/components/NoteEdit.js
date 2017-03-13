@@ -67,14 +67,14 @@ export default class NoteEdit extends Component {
           <Menu onSelect={this.onMenuSelected} name={this.menuName} renderer={CustomMenu}>
             <MenuTrigger disabled={true} />
             <MenuOptions>
-              <MenuOption value={'delete'} renderTouchable={renderTouchable}>
-                <Text>Delete</Text>
+              <MenuOption value={'delete'} renderTouchable={renderTouchable} style={styles.menuOption}>
+                <Text style={styles.menuOptionText}>Delete</Text>
               </MenuOption>
-              <MenuOption value={'share'} renderTouchable={renderTouchable}>
-                <Text>Share</Text>
+              <MenuOption value={'share'} renderTouchable={renderTouchable} style={styles.menuOption}>
+                <Text style={styles.menuOptionText}>Share</Text>
               </MenuOption>
-              <MenuOption value={'insert-date'} renderTouchable={renderTouchable}>
-                <Text>Insert current date</Text>
+              <MenuOption value={'insert-date'} renderTouchable={renderTouchable} style={styles.menuOption}>
+                <Text style={styles.menuOptionText}>Insert current date</Text>
               </MenuOption>
             </MenuOptions>
           </Menu>

@@ -4,8 +4,9 @@ import { Animated, Easing, StyleSheet } from 'react-native';
 const OPEN_ANIM_DURATION = 225
 const CLOSE_ANIM_DURATION = 195;
 
+// Padding is 8 by material design
 export const computePosition = ({ windowLayout, triggerLayout, optionsLayout }) => {
-  return { top: triggerLayout.y, left: windowLayout.width - optionsLayout.width };
+  return { top: 8, left: windowLayout.width - optionsLayout.width - 6 };
 };
 
 export default class ContextMenu extends React.Component {

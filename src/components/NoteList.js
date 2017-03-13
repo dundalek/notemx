@@ -73,8 +73,8 @@ export default class NoteList extends Component {
         <Menu onSelect={this.onMenuSelected} name={this.menuName} renderer={CustomMenu}>
           <MenuTrigger disabled={true} />
           <MenuOptions>
-            <MenuOption value={'create_folder'} renderTouchable={renderTouchable}>
-              <Text>Create New Folder</Text>
+            <MenuOption value={'create_folder'} renderTouchable={renderTouchable} style={styles.menuOption}>
+              <Text style={styles.menuOptionText}>Create New Folder</Text>
             </MenuOption>
           </MenuOptions>
         </Menu>
