@@ -69,9 +69,13 @@ export default class App extends Component {
       this.saveNote();
       if (this.menuContext && this.menuContext.isMenuOpen()) {
         this.menuContext.closeMenu();
+        return false;
       }
-      if (_navigator.getCurrentRoutes().length === 1  ) {
-         return false;
+      if (_navigator.getCurrentRoutes().length <= 1) {
+        if (this.state.sharedText) {
+          this.setState({ sharedText: '' });
+        }
+        return false;
       }
       _navigator.pop();
       return true;
@@ -157,11 +161,15 @@ export default class App extends Component {
             isSearching={true}
           />
         );
-      case 'NoteEdit':
+      case 'NoteEdit': {
+        const note = {
+          ...this.state.note,
+          ...this.dirtyNote,
+        };
         return (
           <NoteEdit
             navigator={navigator}
-            note={this.state.note}
+            note={note}
             updateNote={this.updateNote}
             saveNote={this.saveNote}
             deleteNote={this.deleteNote}
@@ -171,6 +179,7 @@ export default class App extends Component {
             isLoading={this.state.isLoading}
           />
         );
+      }
     }
   }
 
