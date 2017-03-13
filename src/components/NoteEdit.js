@@ -8,17 +8,24 @@ import CustomMenu from '../util/CustomMenu';
 
 const renderTouchable = () => <TouchableOpacity/>;
 
+type Selection = { start: number, end: number };
+
 export default class NoteEdit extends Component {
   state: {
     title: string;
     text: string;
+    selection: ?Selection;
   }
   menuName: string;
+  selection: ?Selection;
 
   constructor(props: Object) {
     super(props);
     this.menuName = 'EditNoteMenu';
-    this.state = this.getStateFromProps(props);
+    this.state = {
+      ...this.getStateFromProps(props),
+      selection: null
+    };
   }
 
   componentWillReceiveProps(nextProps: Object) {
@@ -40,7 +47,7 @@ export default class NoteEdit extends Component {
 
   render() {
     const { note, navigator, saveNote, styles, isLoading } = this.props;
-    const { text, title } = this.state;
+    const { text, title, selection } = this.state;
 
     return (
       <View style={{flex: 1}}>
@@ -66,6 +73,9 @@ export default class NoteEdit extends Component {
               <MenuOption value={'share'} renderTouchable={renderTouchable}>
                 <Text>Share</Text>
               </MenuOption>
+              <MenuOption value={'insert-date'} renderTouchable={renderTouchable}>
+                <Text>Insert current date</Text>
+              </MenuOption>
             </MenuOptions>
           </Menu>
           <TextInput
@@ -85,11 +95,13 @@ export default class NoteEdit extends Component {
             textAlignVertical='top'
             underlineColorAndroid='transparent'
             onChangeText={this.updateNoteContent}
+            selection={selection}
             // we handle back button and app state change so these should no be necessary to catch changes
             // onBlur={saveNote}
             // onEndEditing={saveNote}
             value={text}
             editable={!isLoading}
+            onSelectionChange={this.onSelectionChange}
           />
         </View>
     );
@@ -112,6 +124,12 @@ export default class NoteEdit extends Component {
           content: this.state.text,
         });
         break;
+      case 'insert-date': {
+        const d = new Date();
+        const insertedText = `${d.getDate()}.${d.getMonth()+1}.`;
+        this.insertText(insertedText);
+        break;
+      }
     }
   }
 
@@ -121,19 +139,52 @@ export default class NoteEdit extends Component {
 
   updateNoteTitle = (title: string) => {
     const { note, updateNote } = this.props;
-    updateNote({ note, title });
-    this.setState({ title });
+    if (title !== this.state.title) {
+      updateNote({ note, title });
+      this.setState({ title });
+    }
   }
 
   updateNoteContent = (text: string) => {
     const { note, updateNote } = this.props;
-    updateNote({ note, content: text});
-    this.setState({ text });
+    if (text !== this.state.text) {
+      updateNote({ note, content: text});
+      this.setState({ text });
+    }
   }
 
   saveNoteAndBack = () => {
     const { navigator, saveNote } = this.props;
     saveNote();
     navigator.pop();
+  }
+
+  onSelectionChange = ({ nativeEvent }: { nativeEvent: { selection: Selection } }) => {
+    this.selection = nativeEvent.selection;
+    if (this.state.selection) {
+      this.setState({
+        selection: null
+      });
+    }
+  }
+
+  insertText = (insertedText: string) => {
+    const { note, updateNote } = this.props;
+    let { text } = this.state;
+    let { selection } = this;
+    let newText;
+    if (selection) {
+      newText = text.slice(0, selection.start) + insertedText + text.slice(selection.end);
+    } else {
+      newText = text + insertedText;
+    }
+    updateNote({ note, content: newText});
+    if (selection) {
+      selection = {
+        start: selection.start + insertedText.length,
+        end: selection.start + insertedText.length // start intentional
+      };
+    }
+    this.setState({ text: newText, selection });
   }
 }
