@@ -7,8 +7,9 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontIcon from 'react-native-vector-icons/FontAwesome';
 import Prompt from 'react-native-prompt';
-import Menu, { MenuOptions, MenuOption, MenuTrigger } from 'react-native-menu';
+import Menu, { MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import SearchBar from 'react-native-material-design-searchbar';
+import CustomMenu from '../util/CustomMenu';
 
 const renderTouchable = () => <TouchableOpacity/>;
 
@@ -68,7 +69,7 @@ export default class NoteList extends Component {
             autoFocus: true
           }}
         />}
-        <Menu onSelect={this.onMenuSelected} name={this.menuName}>
+        <Menu onSelect={this.onMenuSelected} name={this.menuName} renderer={CustomMenu}>
           <MenuTrigger disabled={true} />
           <MenuOptions>
             <MenuOption value={'create_folder'} renderTouchable={renderTouchable}>

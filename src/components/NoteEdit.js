@@ -2,8 +2,9 @@
 
 import React, { Component } from 'react';
 import { View, TextInput, TouchableOpacity, Text } from 'react-native';
-import Menu, { MenuOptions, MenuOption, MenuTrigger } from 'react-native-menu';
+import Menu, { MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import CustomMenu from '../util/CustomMenu';
 
 const renderTouchable = () => <TouchableOpacity/>;
 
@@ -56,7 +57,7 @@ export default class NoteEdit extends Component {
             onActionSelected={this.onActionSelected}
             /*overflowIconName="md-more"*/
           />
-          <Menu onSelect={this.onMenuSelected} name={this.menuName}>
+          <Menu onSelect={this.onMenuSelected} name={this.menuName} renderer={CustomMenu}>
             <MenuTrigger disabled={true} />
             <MenuOptions>
               <MenuOption value={'delete'} renderTouchable={renderTouchable}>

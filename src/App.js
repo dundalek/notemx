@@ -3,7 +3,7 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
 import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl, AppState, Share } from 'react-native';
-import { MenuContext } from 'react-native-menu';
+import { MenuContext } from 'react-native-popup-menu';
 import ShareMenu from 'react-native-share-menu';
 import CustomTransitions from './util/CustomTransitions';
 import NoteList from './components/NoteList';

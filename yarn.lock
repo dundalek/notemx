@@ -2957,11 +2957,9 @@ react-native-material-design-searchbar@dundalek/react-native-material-design-sea
   dependencies:
     react-native-vector-icons "^2.0.3"
 
-react-native-menu@^0.20.2:
-  version "0.20.2"
-  resolved "https://registry.yarnpkg.com/react-native-menu/-/react-native-menu-0.20.2.tgz#a1bec7a3d1660246561298c851f98728bc4a1305"
-  dependencies:
-    react-timer-mixin "^0.13.3"
+react-native-popup-menu@^0.7.2:
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/react-native-popup-menu/-/react-native-popup-menu-0.7.2.tgz#46ce71e3f5341bf82b4b8cab6ba2509f2af86f76"
 
 react-native-prompt@^1.0.0:
   version "1.0.0"
@@ -3079,7 +3077,7 @@ react-test-renderer@~15.4.0:
     fbjs "^0.8.4"
     object-assign "^4.1.0"
 
-react-timer-mixin@^0.13.2, react-timer-mixin@^0.13.3:
+react-timer-mixin@^0.13.2:
   version "0.13.3"
   resolved "https://registry.yarnpkg.com/react-timer-mixin/-/react-timer-mixin-0.13.3.tgz#0da8b9f807ec07dc3e854d082c737c65605b3d22"
 
