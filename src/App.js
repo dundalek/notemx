@@ -40,6 +40,7 @@ export default class App extends Component {
       note: Note;
       isLoading: boolean;
       sharedText: string;
+      searchQuery: string;
   };
   menuContext: Object | null;
   folderCache: Object;
@@ -419,8 +420,8 @@ export default class App extends Component {
     .then(this.loaderWrapper());
   }, 300)
 
-  onSearchChange = (text) => {
-    if (_.isObject(text)) {
+  onSearchChange = (text: string | Object) => {
+    if (typeof text === 'object') {
       // search bar returns object when x is tapped
       text = '';
     }
@@ -437,7 +438,7 @@ export default class App extends Component {
     }
   }
 
-  shareNote = (note) => {
+  shareNote = (note: Note) => {
     Share.share({
       title: note.title,
       message: note.content

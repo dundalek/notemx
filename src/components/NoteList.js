@@ -18,6 +18,7 @@ export default class NoteList extends Component {
   state: {
     promptVisible: boolean;
   };
+  menuName: string;
 
   constructor(props: Object) {
     super(props);
@@ -179,7 +180,7 @@ export default class NoteList extends Component {
     this.props.navigator.pop();
   }
 
-  onSearchChange = (text) => {
+  onSearchChange = (text: string) => {
     this.props.onSearchChange(text);
   }
 }
