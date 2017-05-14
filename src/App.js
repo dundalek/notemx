@@ -2,7 +2,7 @@
 
 import _ from 'lodash';
 import React, { Component } from 'react';
-import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl, AppState, Share } from 'react-native';
+import { Text, Navigator, TouchableHighlight, AppRegistry, ToolbarAndroid, StyleSheet, ListView, View, TextInput, BackAndroid, StatusBar, TouchableOpacity, RefreshControl, AppState, Share, ToastAndroid } from 'react-native';
 import { MenuContext } from 'react-native-popup-menu';
 import ShareMenu from 'react-native-share-menu';
 import CustomTransitions from './util/CustomTransitions';
@@ -17,12 +17,13 @@ function loaderWrapper(startFn, endFn, delay) {
     startFn();
   }, delay);
 
-  return () => {
+  return (res) => {
     if (started) {
       endFn();
     } else {
       clearTimeout(timeout);
     }
+    return res;
   };
 }
 
@@ -141,7 +142,7 @@ export default class App extends Component {
             styles={styles}
             onSearchChange={this.onSearchChange}
             onSearchToggle={this.onSearchToggle}
-            isSharing={!!this.state.sharedText}
+            message={!!this.state.sharedText && <Text style={styles.toolbarMessage}>Select or create note to add shared text</Text>}
           />
         );
       case 'NoteSearch':
@@ -226,11 +227,9 @@ export default class App extends Component {
     });
   }
 
-  addFolder = (path: Path) => {
-    makeDropboxRequest('files/create_folder', { path })
-      .then(() =>  this.listFolder(this.state.path))
-      .catch(e => console.error(e))
-      .then(this.loaderWrapper());
+  addFolder = async (path: Path) => {
+    await this.requestRetryWrapper(() => makeDropboxRequest('files/create_folder', { path }));
+    this.listFolder(this.state.path);
   }
 
   saveNote = async () => {
@@ -244,15 +243,11 @@ export default class App extends Component {
         if (!filePath.match(/\.[a-zA-Z0-9]+$/)) {
           filePath += '.md';
         }
-        try {
-          await makeDropboxRequest('files/move', {
-            from_path: oldNote.path_display,
-            to_path: filePath,
-            autorename: true
-          });
-        } catch (e) {
-          console.error(e);
-        }
+        await this.requestRetryWrapper(() => makeDropboxRequest('files/move', {
+          from_path: oldNote.path_display,
+          to_path: filePath,
+          autorename: true
+        }));
       }
       if (!filePath) {
         filePath = this.state.path + '/' + (note.title || 'Untitled.md');
@@ -265,24 +260,20 @@ export default class App extends Component {
         ? { ".tag": "update", "update": oldNote.rev } // overwrite only if rev matches
         : 'add';
 
-      makeDropboxUploadRequest({
+      const result = await this.requestRetryWrapper(() => makeDropboxUploadRequest({
          path: filePath,
          mode,
          autorename: true,
-      }, note.content)
-        .then(note => {
-          this.setState({
-            note: this.transformNote(note)
-          });
-        })
-        .catch(e => console.error(e))
-        .then(this.loaderWrapper())
-        .then(() => {
-          // if it is a new file then refresh
-          if (!oldNote.path_display || (oldNote.title && note.title && note.title !== oldNote.title)) {
-            this.onRefresh();
-          }
-        });
+      }, note.content));
+
+      this.setState({
+        note: this.transformNote(result)
+      });
+
+      // if it is a new file then refresh
+      if (!oldNote.path_display || (oldNote.title && result.title && result.title !== oldNote.title)) {
+        this.onRefresh();
+      }
     }
   }
 
@@ -293,14 +284,12 @@ export default class App extends Component {
     };
   }
 
-  deleteNote = (note: Note) => {
-    makeDropboxRequest('files/delete', { path: note.path_display })
-      .catch(e => console.error(e))
-      .then(this.loaderWrapper())
-      .then(this.onRefresh);
+  deleteNote = async (note: Note) => {
+    await this.requestRetryWrapper(() => makeDropboxRequest('files/delete', { path: note.path_display }));
+    this.onRefresh();
   }
 
-  loadNote = (path: Path) => {
+  loadNote = async (path: Path) => {
     this.setState({
       note: {
         title: path.split('/').slice(-1)[0],
@@ -308,26 +297,20 @@ export default class App extends Component {
       },
       isLoading: true,
     });
-    makeDropboxDownloadRequest({ path })
-      .then((item) => {
-        const note = this.transformNote(item);
-        if (this.state.sharedText) {
-          note.content += '\n\n' + this.state.sharedText;
-          this.updateNote({
-            note,
-            content: note.content
-          });
-        }
-        this.setState({
-          isLoading: false,
-          note: note,
-          sharedText: ''
-        });
-      })
-      .catch((error) => {
-        console.error(error);
-      })
-      .then(this.loaderWrapper());
+    const item = await this.requestRetryWrapper(() => makeDropboxDownloadRequest({ path }))
+    const note = this.transformNote(item);
+    if (this.state.sharedText) {
+      note.content += '\n\n' + this.state.sharedText;
+      this.updateNote({
+        note,
+        content: note.content
+      });
+    }
+    this.setState({
+      isLoading: false,
+      note: note,
+      sharedText: ''
+    });
   }
 
   transformNote(item: Object): Note {
@@ -363,20 +346,45 @@ export default class App extends Component {
       .then(() => this.setState({ isRefreshing: this.state.isRefreshing - 1 }));
   }
 
-  listFolder = (path: Path) => {
-    return makeDropboxRequest('files/list_folder', { path })
-      .then((response) => {
-        const items = response.entries.map(item => ({
-          id: item.id,
-          folder: item['.tag'] === 'folder',
-          title: item.name,
-          path_display: item.path_display,
-          rev: item.rev
-        }));
+  listFolder = async (path: Path) => {
+    const response = await this.requestRetryWrapper(() => makeDropboxRequest('files/list_folder', { path }));
 
-        this.folderCache[path] = items;
-        this.setState({ items });
-      })
+    const items = response.entries.map(item => ({
+      id: item.id,
+      folder: item['.tag'] === 'folder',
+      title: item.name,
+      path_display: item.path_display,
+      rev: item.rev
+    }));
+
+    this.folderCache[path] = items;
+    this.setState({ items });
+  }
+
+  async requestRetryWrapper(fn) {
+    let delay = 2000;
+    let numRetries = 5;
+    let response = null;
+    const loaderFn = this.loaderWrapper();
+
+    while (numRetries >= 0) {
+      try {
+        response = await fn();
+        break;
+      } catch (e) {
+        ToastAndroid.showWithGravity(`Response error, retrying in ${Math.round(delay/1000)}s`, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+        await new Promise((resolve) => setTimeout(resolve), delay);
+        numRetries -= 1;
+        delay = delay * 2;
+      }
+    }
+
+    loaderFn();
+    return response;
+  }
+
+  requestWrapper(fn) {
+    return fn()
       .catch((error) => {
         console.error(error);
       })
@@ -392,32 +400,27 @@ export default class App extends Component {
   }
 
   _doSearch = _.debounce((query) => {
-    makeDropboxRequest('files/search', {
+    const response = this.requestRetryWrapper(() => makeDropboxRequest('files/search', {
       path: "",
       query,
       start: 0,
       max_results: 20,
       // "mode": "filename"
-    })
-    .then((response) => {
-      const items = response.matches.map(match => {
-        const item = match.metadata;
-        return {
-          id: item.id,
-          folder: item['.tag'] === 'folder',
-          title: item.name,
-          path_display: item.path_display,
-          rev: item.rev
-        }
-      });
+    }));
 
-      // this.folderCache[path] = items;
-      this.setState({ items });
-    })
-    .catch((error) => {
-      console.error(error);
-    })
-    .then(this.loaderWrapper());
+    const items = response.matches.map(match => {
+      const item = match.metadata;
+      return {
+        id: item.id,
+        folder: item['.tag'] === 'folder',
+        title: item.name,
+        path_display: item.path_display,
+        rev: item.rev
+      }
+    });
+
+    // this.folderCache[path] = items;
+    this.setState({ items });
   }, 300)
 
   onSearchChange = (text: string | Object) => {

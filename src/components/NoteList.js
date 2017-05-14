@@ -30,7 +30,7 @@ export default class NoteList extends Component {
   }
 
   render() {
-    const { addNote, path, onRefresh, items, isRefreshing, styles, isSearching, isSharing } = this.props;
+    const { addNote, path, onRefresh, items, isRefreshing, styles, isSearching, message } = this.props;
     const toolbarIcon = (path || isSearching) ? 'keyboard-arrow-left' : null;
     let title = '';
     if (path) {
@@ -78,7 +78,7 @@ export default class NoteList extends Component {
             </MenuOption>
           </MenuOptions>
         </Menu>
-        {isSharing && <Text style={styles.toolbarMessage}>Select or create note to add shared text</Text>}
+        {message}
         {items && (items.length > 0 || isRefreshing)
           ? <ListView
             dataSource={this.ds.cloneWithRows(items)}
